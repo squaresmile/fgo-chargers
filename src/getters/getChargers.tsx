@@ -6,12 +6,38 @@ interface Charge {
 }
 
 export interface Charger {
-    charges?: Charge[];
+    charges: Charge[];
     id: number;
     img: string;
     name: string;
     np: string;
 }
+
+type ChargeInfoMap = Map<string, Charger[]>;
+
+export interface ChargeInfo {
+    chargeValue: string;
+    chargers: Charger[];
+}
+
+export interface CategorizedChargeInfo {
+    chargers: Charger[];
+    selfChargeAOE: ChargeInfo[];
+    selfChargeST: ChargeInfo[];
+    selfChargeSupport: ChargeInfo[];
+    partyCharge: ChargeInfo[];
+    allyCharge: ChargeInfo[];
+}
+
+const chargeSum = (charges: Charge[], chargeType: "self" | "ptAll" | "ptOne") => {
+    return charges.reduce((acc, charge) => (acc += charge.type === chargeType ? charge.value : 0), 0);
+};
+
+const mapToChargeInfo = (chargeMap: Map<string, Charger[]>): ChargeInfo[] => {
+    return Array.from(chargeMap.entries()).map(([chargeValue, chargers]) => {
+        return { chargeValue, chargers };
+    });
+};
 
 const getCharges = (_skills: Skill.Skill[]): Charge[] => {
     const skills = _skills.slice();
@@ -26,7 +52,7 @@ const getCharges = (_skills: Skill.Skill[]): Charge[] => {
     return charges;
 };
 
-const getServants = (async (): Promise<Servant.Servant[]> => {
+const getServants = async (): Promise<Servant.Servant[]> => {
     const servants: Servant.Servant[] = await (
         await fetch("https://api.atlasacademy.io/export/JP/nice_servant_lang_en.json")
     ).json();
@@ -52,10 +78,75 @@ const getServants = (async (): Promise<Servant.Servant[]> => {
     );
 
     return servants;
-})();
+};
 
-const getChargers: () => Promise<Charger[]> = async () => {
-    return (await getServants).map((servant) => ({
+const getSelfChargers = (chargers: Charger[]) => {
+    const selfChargeAOE: ChargeInfoMap = new Map();
+    const selfChargeST: ChargeInfoMap = new Map();
+    chargers
+        .filter((charger) => charger.charges.some((charge) => charge.type === "self"))
+        .forEach((charger) => {
+            const chargeValue = chargeSum(charger.charges, "self");
+            if (charger.np === "enemyAll") {
+                const valText = [79.5, 80].includes(chargeValue)
+                    ? "79~80"
+                    : chargeValue > 100
+                    ? "100+"
+                    : chargeValue.toString();
+                const mapValue = selfChargeAOE.get(valText);
+                if (mapValue !== undefined) {
+                    mapValue.push(charger);
+                } else {
+                    selfChargeAOE.set(valText, [charger]);
+                }
+            } else if (charger.np === "enemy") {
+                const valText = chargeValue > 100 ? "100+" : chargeValue.toString();
+                const mapValue = selfChargeST.get(valText);
+                if (mapValue !== undefined) {
+                    mapValue.push(charger);
+                } else {
+                    selfChargeST.set(valText, [charger]);
+                }
+            }
+        });
+    return { selfChargeAOE: mapToChargeInfo(selfChargeAOE), selfChargeST: mapToChargeInfo(selfChargeST) };
+};
+
+const getSupportChargers = (chargers: Charger[]) => {
+    const partyCharge: ChargeInfoMap = new Map();
+    chargers
+        .filter((charger) => charger.charges.some((charge) => charge.type === "ptAll"))
+        .forEach((charger) => {
+            const chargeValue = chargeSum(charger.charges, "ptAll");
+            const valText = chargeValue.toString();
+            const mapValue = partyCharge.get(valText);
+            if (mapValue !== undefined) {
+                mapValue.push(charger);
+            } else {
+                partyCharge.set(valText, [charger]);
+            }
+        });
+
+    const allyCharge: ChargeInfoMap = new Map();
+    chargers
+        .filter((charger) => charger.charges.some((charge) => charge.type === "ptOne"))
+        .forEach((charger) => {
+            const chargeValue = chargeSum(charger.charges, "ptOne");
+            const valText = chargeValue > 100 ? "100+" : chargeValue.toString();
+            const mapValue = allyCharge.get(valText);
+            if (mapValue !== undefined) {
+                mapValue.push(charger);
+            } else {
+                allyCharge.set(valText, [charger]);
+            }
+        });
+
+    return { partyCharge: mapToChargeInfo(partyCharge), allyCharge: mapToChargeInfo(allyCharge) };
+};
+
+const getChargers: () => Promise<CategorizedChargeInfo> = async () => {
+    const servants = await getServants();
+    const chargers = servants.map((servant) => ({
         charges: getCharges(servant.skills),
         id: servant.id,
         img: servant.extraAssets.faces.ascension?.[1]
@@ -72,6 +163,9 @@ const getChargers: () => Promise<Charger[]> = async () => {
               )[0].funcTargetType
             : "",
     }));
+    const { selfChargeAOE, selfChargeST } = getSelfChargers(chargers);
+    const { partyCharge, allyCharge } = getSupportChargers(chargers);
+    return { chargers, selfChargeAOE, selfChargeST, selfChargeSupport: [], partyCharge, allyCharge };
 };
 
 export default getChargers;

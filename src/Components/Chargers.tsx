@@ -1,22 +1,33 @@
 import React from "react";
 import { Table } from "react-bootstrap";
 
-import { Charger } from "../getters/getChargers";
-
-import "./Chargers.css";
+import { ChargeInfo, Charger } from "../getters/getChargers";
 
 interface IProps {
-    chargers: { [key: number]: Charger[] };
-    selfChargeSupport?: { [key: number]: Charger[] };
-    partyChargers?: { [key: number]: Charger[] };
-    allyChargers?: { [key: number]: Charger[] };
+    selfChargers?: ChargeInfo[];
+    selfChargeSupport?: ChargeInfo[];
+    partyChargers?: ChargeInfo[];
+    allyChargers?: ChargeInfo[];
 }
-const Chargers = ({ chargers, partyChargers, selfChargeSupport, allyChargers }: IProps) => {
-    if (!chargers) return null;
-    if (partyChargers === undefined || selfChargeSupport === undefined || allyChargers === undefined) {
+
+const Chargers = ({ selfChargers, partyChargers, selfChargeSupport, allyChargers }: IProps) => {
+    if (
+        selfChargers === undefined &&
+        partyChargers === undefined &&
+        selfChargeSupport === undefined &&
+        allyChargers === undefined
+    )
+        return null;
+
+    if (
+        selfChargers !== undefined &&
+        partyChargers === undefined &&
+        selfChargeSupport === undefined &&
+        allyChargers === undefined
+    ) {
         const dictOfRows: { [key: string]: JSX.Element[] } = {};
-        Object.keys(chargers).forEach((charge) => {
-            const rowOfImages = getChargerRow(chargers[charge as any as number]);
+        for (const { chargeValue, chargers } of selfChargers) {
+            const rowOfImages = getChargerRow(chargers);
             const splitRows = [];
             if (rowOfImages.length > 10) {
                 for (let i = Math.floor(rowOfImages.length / 8); i > 0; i--) {
@@ -25,8 +36,8 @@ const Chargers = ({ chargers, partyChargers, selfChargeSupport, allyChargers }: 
             } else {
                 splitRows.push(rowOfImages);
             }
-            dictOfRows[charge] = splitRows as any[];
-        });
+            dictOfRows[chargeValue] = splitRows as any[];
+        }
         return (
             <Table striped bordered hover variant="dark">
                 <tbody>
@@ -42,34 +53,41 @@ const Chargers = ({ chargers, partyChargers, selfChargeSupport, allyChargers }: 
             </Table>
         );
     }
+
     const dictOfRowsParty: { [key: string]: JSX.Element[] } = {};
     const dictOfRowsAlly: { [key: string]: JSX.Element[] } = {};
     const dictOfRowsSelf: { [key: string]: JSX.Element[] } = {};
 
-    Object.keys(partyChargers).forEach((charge) => {
-        const rowOfImages = getChargerRow(partyChargers[charge as any as number]);
-        const splitRows = [];
-        if (rowOfImages.length > 10) {
-            for (let i = Math.floor(rowOfImages.length / 8); i > 0; i--) {
-                splitRows.push(rowOfImages.splice(0, Math.ceil(rowOfImages.length / i)));
+    if (partyChargers !== undefined) {
+        for (const { chargeValue, chargers } of partyChargers) {
+            const rowOfImages = getChargerRow(chargers);
+            const splitRows = [];
+            if (rowOfImages.length > 10) {
+                for (let i = Math.floor(rowOfImages.length / 8); i > 0; i--) {
+                    splitRows.push(rowOfImages.splice(0, Math.ceil(rowOfImages.length / i)));
+                }
+            } else {
+                splitRows.push(rowOfImages);
             }
-        } else {
-            splitRows.push(rowOfImages);
+            dictOfRowsParty[chargeValue] = splitRows as any[];
         }
-        dictOfRowsParty[charge] = splitRows as any[];
-    });
-    Object.keys(allyChargers).forEach((charge) => {
-        const rowOfImages = getChargerRow(allyChargers[charge as any as number]);
-        const splitRows = [];
-        if (rowOfImages.length > 10) {
-            for (let i = Math.floor(rowOfImages.length / 8); i > 0; i--) {
-                splitRows.push(rowOfImages.splice(0, Math.ceil(rowOfImages.length / i)));
+    }
+
+    if (allyChargers !== undefined) {
+        for (const { chargeValue, chargers } of allyChargers) {
+            const rowOfImages = getChargerRow(chargers);
+            const splitRows = [];
+            if (rowOfImages.length > 10) {
+                for (let i = Math.floor(rowOfImages.length / 8); i > 0; i--) {
+                    splitRows.push(rowOfImages.splice(0, Math.ceil(rowOfImages.length / i)));
+                }
+            } else {
+                splitRows.push(rowOfImages);
             }
-        } else {
-            splitRows.push(rowOfImages);
+            dictOfRowsAlly[chargeValue] = splitRows as any[];
         }
-        dictOfRowsAlly[charge] = splitRows as any[];
-    });
+    }
+
     return (
         <>
             <Table striped bordered hover variant="dark">

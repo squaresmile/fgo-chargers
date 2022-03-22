@@ -4,13 +4,14 @@ body {
     padding: 0;
     height: fit-content;
     background-color: #323539;
-    width: calc(100vw-20px);
+    width: calc(100vw - 20px);
 }
 a {
     margin: -2px;
 }
 .nav.nav-tabs .nav-link.active {
     background-color: #fff !important;
+    color: #495057;
 }
 .nav.nav-tabs .nav-link {
     background-color: #212529 !important;
@@ -23,14 +24,13 @@ a {
 .nav-tabs {
     border: 0 !important;
 }
-div#root {
+div#__next {
     background-color: #323539;
 }
 /* Monitors only */
 @media (min-width: 991.98px) {
-    div#root {
+    div#__next {
         position: absolute;
-        /* width: 1475.43px; */
         width: 100%;
         left: 50%;
         transform: translate(-50%);
