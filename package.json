@@ -24,7 +24,7 @@
     "build": "next build && next export",
     "start": "next start",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d out"
+    "deploy": "gh-pages --dist out --dotfiles"
   },
   "eslintConfig": {
     "extends": [
