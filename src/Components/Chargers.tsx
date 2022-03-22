@@ -123,7 +123,7 @@ const getChargerRow = (chargers: Charger[]) => {
     const rows = chargers.map((charger) => {
         return (
             <a key={charger.id} href={`https://apps.atlasacademy.io/db/JP/servant/${charger.id}`}>
-                <img src={charger.img} alt={charger.name} title={charger.name} />
+                <img src={charger.img} alt={charger.name} title={charger.name} width={142} height={155} />
             </a>
         );
     });
