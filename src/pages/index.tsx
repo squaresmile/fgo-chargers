@@ -3,7 +3,7 @@ import Head from "next/head";
 import React from "react";
 import { Tab, Tabs } from "react-bootstrap";
 
-import Chargers from "../Components/Chargers";
+import { ChargerTable } from "../Components/Chargers";
 import getChargers, { CategorizedChargeInfo } from "../getters/getChargers";
 
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -30,17 +30,14 @@ const App = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
             </Head>
             <Tabs id="charger-tabs">
                 <Tab title="Self Charge AOE" eventKey="self-charge-aoe">
-                    <Chargers selfChargers={selfChargeAOE} />
+                    <ChargerTable chargeInfos={selfChargeAOE} />
                 </Tab>
                 <Tab title="Self Charge ST" eventKey="self-charge-st">
-                    <Chargers selfChargers={selfChargeST} />
+                    <ChargerTable chargeInfos={selfChargeST} />
                 </Tab>
                 <Tab title="Targeted &amp; Party Chargers" eventKey="targeted-party-chargers">
-                    <Chargers
-                        partyChargers={partyCharge}
-                        selfChargeSupport={selfChargeSupport}
-                        allyChargers={allyCharge}
-                    />
+                    <ChargerTable chargeInfos={partyCharge} />
+                    <ChargerTable chargeInfos={allyCharge} />
                 </Tab>
             </Tabs>
         </>
